@@ -1,16 +1,14 @@
 package com.seapip.thomas.barmusic;
 
-import android.app.SearchManager;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.widget.ArrayAdapter;
+import android.view.View;
 import android.widget.ListView;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -20,36 +18,23 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setTitle("Suggest music");
+        actionBar.setTitle("Happy Hour Bar");
 
         ListView listView = (ListView) findViewById(R.id.list);
-        listView.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1,
-                new String[]{"rockstar", "New Rules", "Too Good At Goodbyes", "Havana",
-                        "Dusk Till Dawn - Radio Edit", "Mi Gente", "Silence",
-                        "Look What You Made Me Do"}));
+        ArrayList<Song> songs = new ArrayList<>();
+        songs.add(new Song("Lucy in the Sky with Diamonds", "Eleanor Rigby", 0));
+        songs.add(new Song("Drops of Jupiter", "Some artist", 12));
+        songs.add(new Song("Thriller", "Michael Jackson", 7));
+        songs.add(new Song("Knights of Cydonia", "<3 Anime", 5));
+        songs.add(new Song("Hymn for the weekend", "Coldplay", 2));
+        listView.setAdapter(new Adapter(this, songs));
 
-
-        // Get the intent, verify the action and get the query
-        Intent intent = getIntent();
-        Log.e("BAR", "Uhm?");
-        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-            final String query = intent.getStringExtra(SearchManager.QUERY);
-            Log.e("BAR", query);
-            //setListAdapter();
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_search, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        onSearchRequested();
-        return true;
-        //return super.onOptionsItemSelected(item);
+        FloatingActionButton floatingActionButton = (FloatingActionButton) findViewById(R.id.suggest);
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, SearchView.class));
+            }
+        });
     }
 }
