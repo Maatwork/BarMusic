@@ -18,7 +18,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SearchView"
+            android:name=".SearchActivity"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme">
             <intent-filter>
