@@ -1,4 +1,6 @@
-package com.seapip.thomas.barmusic;
+package com.seapip.thomas.barmusic.webapi;
+
+import com.seapip.thomas.barmusic.webapi.objects.Song;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -6,7 +8,7 @@ import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
-public interface Service {
+public interface MusicService {
     @GET("/{bar_uuid}")
     Call<Song[]> library(@Path("bar_uuid") String barId);
 

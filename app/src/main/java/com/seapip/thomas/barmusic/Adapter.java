@@ -34,8 +34,9 @@ public class Adapter extends ArrayAdapter<Item> {
     }
 
     public void updateAt(int index, ArrayList<Item> items) {
-        mItems.removeAll(mItems.subList(index, items.size() > mItems.size() ? mItems.size() : items.size()));
-        mItems.addAll(index, items);
+        //mItems.removeAll(mItems.subList(index, items.size() > mItems.size() ? mItems.size() : items.size()));
+        mItems.clear();
+        mItems.addAll(items);
         notifyDataSetChanged();
     }
 

@@ -1,18 +1,20 @@
-package com.seapip.thomas.barmusic;
+package com.seapip.thomas.barmusic.webapi;
+
+import com.seapip.thomas.barmusic.Callback;
 
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class ServiceManager {
-    private Service mService;
+public class MusicServiceManager {
+    private MusicService mService;
 
-    public void getService(final Callback<Service> callback) {
+    public void getService(final Callback<MusicService> callback) {
         if (mService == null) {
             mService = new Retrofit.Builder()
                     .baseUrl("https://barzo.seapip.com/")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
-                    .create(Service.class);
+                    .create(MusicService.class);
         }
         callback.onSuccess(mService);
     }

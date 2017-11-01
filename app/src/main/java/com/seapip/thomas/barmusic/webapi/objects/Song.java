@@ -1,4 +1,4 @@
-package com.seapip.thomas.barmusic;
+package com.seapip.thomas.barmusic.webapi.objects;
 
 public class Song {
     public int id;
