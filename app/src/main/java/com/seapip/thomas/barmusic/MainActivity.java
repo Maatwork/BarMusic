@@ -155,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
 
                             @Override
                             public void onFailure(Call<Bar> call, Throwable t) {
-                                Log.e("BAR", "FUCK me");
+                                Log.e("BAR", t.getMessage());
                             }
                         });
                     }

@@ -11,7 +11,7 @@ public class BarServiceManager {
     public void getService(final Callback<BarService> callback) {
         if (mService == null) {
             mService = new Retrofit.Builder()
-                    .baseUrl("https://maatwerk.works/")
+                    .baseUrl("http://maatwerk.works/")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
                     .create(BarService.class);
