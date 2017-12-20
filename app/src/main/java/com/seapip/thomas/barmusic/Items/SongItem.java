@@ -12,20 +12,20 @@ import android.widget.TextView;
 import com.seapip.thomas.barmusic.R;
 
 public class SongItem implements Item {
-    private int id;
+    private String id;
     private String title;
     private String artist;
     private int votes;
     private Runnable runnable;
 
-    public SongItem(int id, String title, String artist, int votes) {
+    public SongItem(String id, String title, String artist, int votes) {
         this.id = id;
         this.title = title;
         this.artist = artist;
         this.votes = votes;
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 

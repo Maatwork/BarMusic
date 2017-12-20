@@ -11,7 +11,7 @@ public class MusicServiceManager {
     public void getService(final Callback<MusicService> callback) {
         if (mService == null) {
             mService = new Retrofit.Builder()
-                    .baseUrl("https://barzo.seapip.com/")
+                    .baseUrl("http://music.maatwerk.works/api/")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
                     .create(MusicService.class);

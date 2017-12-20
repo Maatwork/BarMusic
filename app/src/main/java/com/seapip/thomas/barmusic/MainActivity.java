@@ -22,6 +22,7 @@ import com.seapip.thomas.barmusic.webapi.MusicService;
 import com.seapip.thomas.barmusic.webapi.MusicServiceManager;
 import com.seapip.thomas.barmusic.webapi.objects.Bar;
 import com.seapip.thomas.barmusic.webapi.objects.Song;
+import com.seapip.thomas.barmusic.webapi.objects.Vote;
 
 import java.util.ArrayList;
 import java.util.regex.Matcher;
@@ -32,7 +33,7 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-    final private static String BAR_ID = "testuuid";
+    private String barId = "testuuid";
     private MusicServiceManager musicServiceManager = new MusicServiceManager();
     private BarServiceManager barServiceManager = new BarServiceManager();
     private ListView listView;
@@ -72,7 +73,9 @@ public class MainActivity extends AppCompatActivity {
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, SearchActivity.class));
+                Intent intent = new Intent(MainActivity.this, SearchActivity.class);
+                intent.putExtra("barId", barId);
+                startActivity(intent);
             }
         });
 
@@ -85,13 +88,14 @@ public class MainActivity extends AppCompatActivity {
         musicServiceManager.getService(new Callback<MusicService>() {
             @Override
             public void onSuccess(MusicService service) {
-                service.queue(BAR_ID).enqueue(new retrofit2.Callback<Song[]>() {
+                service.queue(barId).enqueue(new retrofit2.Callback<Song[]>() {
                     @Override
                     public void onResponse(Call<Song[]> call, Response<Song[]> response) {
+                        Log.e("BAR", response.raw().toString());
                         if (response.isSuccessful()) {
                             ArrayList<Item> items = new ArrayList<>();
                             for (Song song : response.body()) {
-                                items.add(new SongItem(song.id, song.title, song.artist, song.votes));
+                                items.add(new SongItem(song.id, song.name, song.artist, song.count));
                             }
                             ((Adapter) listView.getAdapter()).updateAt(0, items);
                         }
@@ -106,12 +110,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void vote(final int songId) {
-        Log.e("BAR", String.valueOf(songId));
+    private void vote(final String songId) {
+        Log.e("BAR", songId);
         musicServiceManager.getService(new Callback<MusicService>() {
             @Override
             public void onSuccess(MusicService service) {
-                service.vote(songId, "TEMP_DEVICE_ID").enqueue(new retrofit2.Callback<Void>() {
+                service.vote(new Vote(songId, "TEMP_DEVICE_ID")).enqueue(new retrofit2.Callback<Void>() {
                     @Override
                     public void onResponse(Call<Void> call, Response<Void> response) {
                         //Successfully voted
@@ -133,10 +137,13 @@ public class MainActivity extends AppCompatActivity {
         if (result != null) {
             Log.e("BAR", "We've got a result!");
             Log.e("BAR", result.getContents());
-            Matcher matcher = Pattern.compile("https?:\\/\\/music\\.maatwerk\\.works\\/((\\w|\\d)+-(\\w|\\d)+-(\\w|\\d)+-(\\w|\\d)+-(\\w|\\d)+)").matcher(result.getContents());
+            Matcher matcher = Pattern.compile("https?:\\/\\/music\\.maatwerk\\.works\\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})").matcher(result.getContents());
             if (matcher.matches()) {
                 Log.e("BAR", "We've got a match!");
                 final String barUuid = matcher.group(1);
+                barId = barUuid;
+                updateQueue();
+                /*
                 Log.e("BAR", barUuid);
                 barServiceManager.getService(new Callback<BarService>() {
                     @Override
@@ -160,6 +167,7 @@ public class MainActivity extends AppCompatActivity {
                         });
                     }
                 });
+                */
             } else {
                 Toast.makeText(this, "Invalid QR code", Toast.LENGTH_SHORT).show();
             }
