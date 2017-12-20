@@ -111,11 +111,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void vote(final String songId) {
-        Log.e("BAR", songId);
         musicServiceManager.getService(new Callback<MusicService>() {
             @Override
             public void onSuccess(MusicService service) {
-                service.vote(new Vote(songId, "TEMP_DEVICE_ID")).enqueue(new retrofit2.Callback<Void>() {
+                service.vote(new Vote(songId)).enqueue(new retrofit2.Callback<Void>() {
                     @Override
                     public void onResponse(Call<Void> call, Response<Void> response) {
                         //Successfully voted
