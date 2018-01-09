@@ -16,6 +16,10 @@ import android.widget.ListView;
 
 import com.seapip.thomas.barmusic.Items.Item;
 import com.seapip.thomas.barmusic.Items.SongItem;
+import com.seapip.thomas.barmusic.webapi.MusicService;
+import com.seapip.thomas.barmusic.webapi.MusicServiceManager;
+import com.seapip.thomas.barmusic.webapi.objects.Song;
+import com.seapip.thomas.barmusic.webapi.objects.Vote;
 
 import java.util.ArrayList;
 
@@ -24,14 +28,16 @@ import retrofit2.Response;
 
 public class SearchActivity extends AppCompatActivity {
 
-    final private static String BAR_ID = "testuuid";
+    private String barId = "testuuid";
     private ListView listView;
-    private ServiceManager serviceManager = new ServiceManager();
+    private MusicServiceManager musicServiceManager = new MusicServiceManager();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
+
+        barId = getIntent().getStringExtra("barId");
 
 
         ActionBar actionBar = getSupportActionBar();
@@ -95,17 +101,17 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void search(final String query) {
-        serviceManager.getService(new Callback<Service>() {
+        musicServiceManager.getService(new Callback<MusicService>() {
             @Override
-            public void onSuccess(Service service) {
-                Call<Song[]> call = query.length() > 0 ? service.search(BAR_ID, query) : service.library(BAR_ID);
+            public void onSuccess(MusicService service) {
+                Call<Song[]> call = query.length() > 0 ? service.search(query, barId) : service.library(barId);
                 call.enqueue(new retrofit2.Callback<Song[]>() {
                     @Override
                     public void onResponse(Call<Song[]> call, Response<Song[]> response) {
                         if (response.isSuccessful()) {
                             ArrayList<Item> items = new ArrayList<>();
                             for (Song song : response.body()) {
-                                items.add(new SongItem(song.id, song.title, song.artist, song.votes));
+                                items.add(new SongItem(song.id, song.name, song.artist, song.count));
                             }
                             listView.setAdapter(new Adapter(SearchActivity.this, items));
                         }
@@ -120,12 +126,11 @@ public class SearchActivity extends AppCompatActivity {
         });
     }
 
-    private void vote(final int songId) {
-        Log.e("BAR", String.valueOf(songId));
-        serviceManager.getService(new Callback<Service>() {
+    private void vote(final String songId) {
+        musicServiceManager.getService(new Callback<MusicService>() {
             @Override
-            public void onSuccess(Service service) {
-                service.vote(songId, "TEMP_DEVICE_ID").enqueue(new retrofit2.Callback<Void>() {
+            public void onSuccess(MusicService service) {
+                service.vote(new Vote(songId)).enqueue(new retrofit2.Callback<Void>() {
                     @Override
                     public void onResponse(Call<Void> call, Response<Void> response) {
                         //Successfully voted

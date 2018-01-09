@@ -10,27 +10,41 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 import com.seapip.thomas.barmusic.Items.Item;
 import com.seapip.thomas.barmusic.Items.SongItem;
+import com.seapip.thomas.barmusic.webapi.BarService;
+import com.seapip.thomas.barmusic.webapi.BarServiceManager;
+import com.seapip.thomas.barmusic.webapi.MusicService;
+import com.seapip.thomas.barmusic.webapi.MusicServiceManager;
+import com.seapip.thomas.barmusic.webapi.objects.Bar;
+import com.seapip.thomas.barmusic.webapi.objects.Song;
+import com.seapip.thomas.barmusic.webapi.objects.Vote;
 
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import retrofit2.Call;
 import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-    final private static String BAR_ID = "testuuid";
-    private ServiceManager serviceManager = new ServiceManager();
+    private String barId = "testuuid";
+    private MusicServiceManager musicServiceManager = new MusicServiceManager();
+    private BarServiceManager barServiceManager = new BarServiceManager();
     private ListView listView;
+    private ActionBar actionBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ActionBar actionBar = getSupportActionBar();
+        actionBar = getSupportActionBar();
         actionBar.setTitle("Happy Hour Bar");
 
         listView = (ListView) findViewById(R.id.list);
@@ -59,22 +73,29 @@ public class MainActivity extends AppCompatActivity {
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, SearchActivity.class));
+                Intent intent = new Intent(MainActivity.this, SearchActivity.class);
+                intent.putExtra("barId", barId);
+                startActivity(intent);
             }
         });
+
+        IntentIntegrator integrator = new IntentIntegrator(this);
+        integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES);
+        integrator.initiateScan();
     }
 
     private void updateQueue() {
-        serviceManager.getService(new Callback<Service>() {
+        musicServiceManager.getService(new Callback<MusicService>() {
             @Override
-            public void onSuccess(Service service) {
-                service.queue(BAR_ID).enqueue(new retrofit2.Callback<Song[]>() {
+            public void onSuccess(MusicService service) {
+                service.queue(barId).enqueue(new retrofit2.Callback<Song[]>() {
                     @Override
                     public void onResponse(Call<Song[]> call, Response<Song[]> response) {
+                        Log.e("BAR", response.raw().toString());
                         if (response.isSuccessful()) {
                             ArrayList<Item> items = new ArrayList<>();
                             for (Song song : response.body()) {
-                                items.add(new SongItem(song.id, song.title, song.artist, song.votes));
+                                items.add(new SongItem(song.id, song.name, song.artist, song.count));
                             }
                             ((Adapter) listView.getAdapter()).updateAt(0, items);
                         }
@@ -89,12 +110,11 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void vote(final int songId) {
-        Log.e("BAR", String.valueOf(songId));
-        serviceManager.getService(new Callback<Service>() {
+    private void vote(final String songId) {
+        musicServiceManager.getService(new Callback<MusicService>() {
             @Override
-            public void onSuccess(Service service) {
-                service.vote(songId, "TEMP_DEVICE_ID").enqueue(new retrofit2.Callback<Void>() {
+            public void onSuccess(MusicService service) {
+                service.vote(new Vote(songId)).enqueue(new retrofit2.Callback<Void>() {
                     @Override
                     public void onResponse(Call<Void> call, Response<Void> response) {
                         //Successfully voted
@@ -108,5 +128,50 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if (result != null) {
+            Log.e("BAR", "We've got a result!");
+            Log.e("BAR", result.getContents());
+            Matcher matcher = Pattern.compile("https?:\\/\\/music\\.maatwerk\\.works\\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})").matcher(result.getContents());
+            if (matcher.matches()) {
+                Log.e("BAR", "We've got a match!");
+                final String barUuid = matcher.group(1);
+                barId = barUuid;
+                updateQueue();
+                /*
+                Log.e("BAR", barUuid);
+                barServiceManager.getService(new Callback<BarService>() {
+                    @Override
+                    public void onSuccess(BarService barService) {
+                        barService.bar(barUuid).enqueue(new retrofit2.Callback<Bar>() {
+                            @Override
+                            public void onResponse(Call<Bar> call, Response<Bar> response) {
+                                if (response.isSuccessful()) {
+                                    String name = response.body().name;
+                                    Log.e("BAR", name);
+                                    actionBar.setTitle(name);
+                                } else {
+                                    Log.e("BAR", response.message());
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<Bar> call, Throwable t) {
+                                Log.e("BAR", t.getMessage());
+                            }
+                        });
+                    }
+                });
+                */
+            } else {
+                Toast.makeText(this, "Invalid QR code", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 }
